@@ -1,0 +1,27 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "DBSCAN Disaster Hotspot Intelligence"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "scikit-learn",
+    "numpy",
+    "pandas",
+    "scipy",
+    "opencv-python-headless",
+    "pillow",
+    "piexif",
+    "sqlalchemy",
+    "python-multipart",
+    "pytest",
+    "httpx",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [".", ".."]
+testpaths = ["tests"]

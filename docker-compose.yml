@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: disaster_hotspot_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=DBSCAN Disaster Hotspot Intelligence
+      - MAPPING_ID=SIH26030
+      - DATABASE_URL=sqlite:///./disaster_mission.db
+    volumes:
+      - ./uploads:/app/uploads
+      - ./data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: disaster_hotspot_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
