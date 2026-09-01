@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { MissionProvider } from './context/MissionContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -17,7 +17,7 @@ import { SystemInfoPage } from './pages/SystemInfoPage';
 function App() {
   return (
     <MissionProvider>
-      <BrowserRouter>
+      <HashRouter>
         <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
           <Navbar />
           <div className="flex-1 flex">
@@ -37,7 +37,7 @@ function App() {
             </main>
           </div>
         </div>
-      </BrowserRouter>
+      </HashRouter>
     </MissionProvider>
   );
 }
