@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMission } from '../context/MissionContext';
+import { useAuth } from '../context/AuthContext';
 import { TacticalBadge } from './TacticalBadge';
 import { ReportModal } from './ReportModal';
 import {
@@ -13,10 +14,15 @@ import {
   AlertCircle,
   Database,
   ExternalLink,
+  LogOut,
+  User,
 } from 'lucide-react';
 
 export const Navbar = () => {
   const { mission, stats, loading, loadDemoMission } = useMission();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   const [reportOpen, setReportOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -27,6 +33,11 @@ export const Navbar = () => {
     } finally {
       setRefreshing(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   const isDemo = mission?.source === 'DEMO';
@@ -76,8 +87,19 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* Actions: Demo Mission, Report, Refresh */}
+          {/* Actions & User Profile */}
           <div className="flex items-center gap-2.5">
+            {/* Operator Badge */}
+            {user && (
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono">
+                <span className="text-base">{user.avatar || '🎖️'}</span>
+                <div>
+                  <div className="font-bold text-slate-200 leading-none">{user.callsign}</div>
+                  <div className="text-[10px] text-cyan-400 leading-none mt-0.5">{user.role}</div>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleReloadDemo}
               disabled={loading || refreshing}
@@ -95,6 +117,18 @@ export const Navbar = () => {
               <FileText className="w-3.5 h-3.5 text-amber-400" />
               <span>Report</span>
             </button>
+
+            {/* Logout Button */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-500/40 transition-all cursor-pointer"
+                title="Logout from tactical terminal"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Exit</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
