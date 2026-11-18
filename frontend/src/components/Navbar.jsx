@@ -2,22 +2,31 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMission } from '../context/MissionContext';
 import { useAuth } from '../context/AuthContext';
-import { TacticalBadge } from './TacticalBadge';
+import { StatusIndicator } from './StatusIndicator';
+import { SeverityBadge } from './SeverityBadge';
 import { ReportModal } from './ReportModal';
+import { formatTime } from '../utils/geo';
 import {
   Shield,
   RefreshCw,
   FileText,
-  LogOut,
   User,
-  ChevronDown,
-  Mail,
-  ShieldCheck,
-  CheckCircle2,
+  Menu,
+  Clock,
+  Compass,
+  Database,
+  Radio,
 } from 'lucide-react';
 
-export const Navbar = () => {
-  const { mission, stats, loading, loadDemoMission } = useMission();
+export const Navbar = ({ onToggleMobileMenu }) => {
+  const {
+    mission,
+    stats,
+    loading,
+    loadDemoMission,
+    isLiveBackend,
+    dataFreshness,
+  } = useMission();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -27,7 +36,6 @@ export const Navbar = () => {
 
   const dropdownRef = useRef(null);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -47,20 +55,12 @@ export const Navbar = () => {
     }
   };
 
-  const handleLogout = () => {
-    setProfileDropdownOpen(false);
-    logout();
-    navigate('/login');
-  };
-
   const isDemo = mission?.source === 'DEMO';
 
-  // Compute clean display name and initials
   const displayName =
     user?.name ||
     (user?.email ? user.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Alex Mercer');
 
-  const displayEmail = user?.email || 'ops.lead@aegis-recon.org';
   const displayRole = user?.role || 'Search & Rescue Lead';
   const initials = displayName
     .split(' ')
@@ -69,92 +69,126 @@ export const Navbar = () => {
     .substring(0, 2)
     .toUpperCase();
 
+  const missionName = mission?.name || 'Operation Aegis: Sector-4 Recon';
+  const sectorLabel = 'Sector 4 · Urban Collapse';
+  const detectionCount = stats?.total_signals || 385;
+
   return (
     <>
-      <header className="sticky top-0 z-40 w-full pro-header text-slate-200 select-none">
-        <div className="px-4 lg:px-6 h-15 flex items-center justify-between gap-4">
-          {/* Brand & Project Metadata */}
-          <div className="flex items-center gap-3.5">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-8.5 h-8.5 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:border-sky-400/50 group-hover:bg-sky-500/15 transition-all duration-200 shadow-sm">
-                <Shield className="w-4.5 h-4.5" />
+      <header className="sticky top-0 z-40 w-full h-14 bg-[#0D1624] border-b border-[#27364C] text-[#EAF2FF] select-none">
+        <div className="px-3 sm:px-5 h-full flex items-center justify-between gap-3">
+          {/* Left: Mobile Menu Toggle + Brand Identity */}
+          <div className="flex items-center gap-3">
+            {onToggleMobileMenu && (
+              <button
+                onClick={onToggleMobileMenu}
+                className="p-1.5 rounded text-[#98AAC2] hover:text-[#EAF2FF] hover:bg-[#18263A] md:hidden cursor-pointer"
+                title="Toggle Menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-7 h-7 rounded bg-[#18263A] border border-[#27364C] flex items-center justify-center text-[#00B7FF] group-hover:border-[#00B7FF] transition-colors">
+                <Shield className="w-4 h-4" />
               </div>
-              <div>
+              <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-100 text-sm tracking-tight group-hover:text-white transition-colors">
-                    Aegis Recon
+                  <span className="font-bold text-sm tracking-tight text-[#EAF2FF] group-hover:text-white font-mono">
+                    AEGIS RECON
                   </span>
-                </div>
-                <div className="text-[11px] text-slate-400 font-normal tracking-tight hidden sm:block">
-                  Aerial Search & Rescue Operations
+                  <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#18263A] text-[#98AAC2] border border-[#27364C]">
+                    OPS INTEL
+                  </span>
                 </div>
               </div>
             </Link>
+
+            {/* Vertical Divider */}
+            <div className="hidden lg:block h-5 w-[1px] bg-[#27364C]" />
+
+            {/* Active Mission & Sector Metadata */}
+            <div className="hidden lg:flex items-center gap-2 text-xs font-mono">
+              <span className="text-[#98AAC2]">Mission:</span>
+              <span className="text-[#EAF2FF] font-semibold truncate max-w-[220px]" title={missionName}>
+                {missionName}
+              </span>
+              <span className="text-[#27364C]">•</span>
+              <span className="text-[#98AAC2]">Sector:</span>
+              <span className="text-[#00B7FF] font-medium">{sectorLabel}</span>
+            </div>
           </div>
 
-          {/* System Status & Mission Badge */}
-          <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/20 text-[11px] font-mono text-emerald-300">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>Engine Online</span>
+          {/* Middle: System Health & Freshness Indicators */}
+          <div className="hidden xl:flex items-center gap-3">
+            {isLiveBackend ? (
+              <StatusIndicator status="online" label="FastAPI Core" details="Online" />
+            ) : (
+              <StatusIndicator status="standalone" label="Client Engine" details="Standalone" />
+            )}
+
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131F30] border border-[#27364C] text-[11px] font-mono text-[#98AAC2]">
+              <Clock className="w-3 h-3 text-[#98AAC2]" />
+              <span>Synced:</span>
+              <span className="text-[#EAF2FF] font-medium">
+                {formatTime(dataFreshness)}
+              </span>
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono text-slate-300">
-              <span className="text-slate-500">Active Sector:</span>
-              <span className="text-sky-300 font-medium">Sector 4 (385 Feeds)</span>
-            </div>
+            {isDemo ? (
+              <SeverityBadge severity="SIMULATED" size="sm" />
+            ) : (
+              <SeverityBadge severity="LIVE" size="sm" />
+            )}
           </div>
 
-          {/* Actions & Profile Dropdown Menu */}
-          <div className="flex items-center gap-2.5">
+          {/* Right: Quick Operational Actions & Profile Menu */}
+          <div className="flex items-center gap-2">
             <button
               onClick={handleReloadDemo}
               disabled={loading || refreshing}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 hover:border-sky-500/40 transition-all duration-150 disabled:opacity-50 cursor-pointer shadow-sm"
-              title="Reset with 385-signal realistic scenario"
+              className="btn-secondary text-xs py-1 px-2.5"
+              title="Reset mission with 385-signal drone scenario"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Reset Mission</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-[#00B7FF] ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Reset Scenario</span>
             </button>
 
             <button
               onClick={() => setReportOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-slate-200 border border-white/[0.1] transition-all duration-150 cursor-pointer shadow-sm"
+              className="btn-secondary text-xs py-1 px-2.5"
+              title="Generate Mission Debrief PDF Report"
             >
-              <FileText className="w-3.5 h-3.5 text-amber-400" />
+              <FileText className="w-3.5 h-3.5 text-[#F5B94E]" />
               <span className="hidden sm:inline">Debrief Report</span>
             </button>
 
-            {/* Profile Dropdown Button */}
+            {/* Profile Menu Button */}
             <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => {
-                  setProfileDropdownOpen(false);
-                  navigate('/profile');
-                }}
-                className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] hover:border-sky-500/40 transition-all cursor-pointer select-none shadow-xs group"
-                title="View Operator Profile & Account"
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded bg-[#131F30] hover:bg-[#18263A] border border-[#27364C] hover:border-[#00B7FF]/50 transition-colors cursor-pointer select-none"
+                title="View Operator Profile"
               >
-                {/* Avatar circle with initials */}
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-[11px] font-mono shadow-xs group-hover:scale-105 transition-transform">
+                <div className="w-6 h-6 rounded bg-[#18263A] border border-[#27364C] text-[#00B7FF] flex items-center justify-center font-bold text-[10px] font-mono">
                   {initials}
                 </div>
-                <div className="hidden md:flex flex-col text-left">
-                  <span className="font-semibold text-xs text-slate-100 group-hover:text-white leading-none">
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="font-semibold text-[11px] text-[#EAF2FF] leading-none">
                     {displayName}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-sans leading-none mt-0.5">
+                  <span className="text-[9px] text-[#98AAC2] font-mono leading-none mt-0.5">
                     {displayRole}
                   </span>
                 </div>
-                <User className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-400 transition-colors ml-0.5" />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Mission Debrief Report Modal */}
+      {/* Debrief Report Modal */}
       {reportOpen && <ReportModal isOpen={reportOpen} onClose={() => setReportOpen(false)} />}
     </>
   );

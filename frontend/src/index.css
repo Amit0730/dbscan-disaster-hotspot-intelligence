@@ -1,34 +1,44 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+@theme {
+  --color-aegis-primary: #0A101B;
+  --color-aegis-sidebar: #0D1624;
+  --color-aegis-surface: #131F30;
+  --color-aegis-elevated: #18263A;
+  --color-aegis-border: #27364C;
+  --color-aegis-accent: #00B7FF;
+  --color-aegis-success: #18D9A4;
+  --color-aegis-warning: #F5B94E;
+  --color-aegis-critical: #FF5A70;
+  --color-aegis-text: #EAF2FF;
+  --color-aegis-muted: #98AAC2;
+}
+
 :root {
   color-scheme: dark;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Deep Obsidian & Zinc theme tokens */
-  --bg-app: #08090d;
-  --bg-canvas: #0c0d12;
-  --bg-surface: #12141c;
-  --bg-surface-hover: #181b26;
-  --bg-elevated: #1a1d2a;
-  
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-focus: rgba(56, 189, 248, 0.4);
-
-  --accent-cyan: #38bdf8;
-  --accent-blue: #60a5fa;
-  --accent-amber: #f59e0b;
-  --accent-red: #f43f5e;
-  --accent-emerald: #10b981;
+  /* Aegis Recon Official Operational Design Tokens */
+  --bg-primary: #0A101B;
+  --bg-sidebar: #0D1624;
+  --bg-surface: #131F30;
+  --bg-elevated: #18263A;
+  --border-aegis: #27364C;
+  --primary-accent: #00B7FF;
+  --success: #18D9A4;
+  --warning: #F5B94E;
+  --critical: #FF5A70;
+  --text-primary: #EAF2FF;
+  --text-secondary: #98AAC2;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--bg-app);
-  color: #e2e8f0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-sans);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   -webkit-font-smoothing: antialiased;
@@ -36,7 +46,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Typography helper classes */
+/* Typography tokens */
 .font-sans {
   font-family: var(--font-sans);
 }
@@ -50,92 +60,184 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Modern Card & Glass panel styling */
+/* Surface & Border Utility Classes */
+.bg-aegis-primary {
+  background-color: #0A101B;
+}
+
+.bg-aegis-sidebar {
+  background-color: #0D1624;
+}
+
+.bg-aegis-surface {
+  background-color: #131F30;
+}
+
+.bg-aegis-elevated {
+  background-color: #18263A;
+}
+
+.border-aegis {
+  border-color: #27364C;
+}
+
+.text-aegis-primary {
+  color: #EAF2FF;
+}
+
+.text-aegis-secondary {
+  color: #98AAC2;
+}
+
+.text-aegis-accent {
+  color: #00B7FF;
+}
+
+/* Aerospace / Enterprise Card Styling */
 .pro-card {
-  background: #11131a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  background-color: #131F30;
+  border: 1px solid #27364C;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .pro-card:hover {
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: #374a66;
 }
 
 .pro-card-interactive {
-  background: #11131a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: #131F30;
+  border: 1px solid #27364C;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pro-card-interactive:hover {
-  border-color: rgba(56, 189, 248, 0.35);
-  background: #141722;
-  transform: translateY(-1.5px);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6);
+  border-color: #00B7FF;
+  background-color: #18263A;
 }
 
 .pro-header {
-  background: rgba(10, 11, 16, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #0D1624;
+  border-bottom: 1px solid #27364C;
 }
 
 .pro-sidebar {
-  background: rgba(10, 11, 16, 0.92);
-  backdrop-filter: blur(16px);
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  background-color: #0D1624;
+  border-right: 1px solid #27364C;
 }
 
-/* Subtle glow utilities */
-.glow-cyan {
-  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.25);
+/* Operational Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #00B7FF;
+  color: #0A101B;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
-.glow-red {
-  box-shadow: 0 0 25px -5px rgba(244, 63, 94, 0.3);
+.btn-primary:hover:not(:disabled) {
+  background-color: #33c5ff;
 }
 
-.glow-amber {
-  box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.25);
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #18263A;
+  color: #EAF2FF;
+  border: 1px solid #27364C;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #21324c;
+  border-color: #384f6f;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Operational Badges */
+.badge-critical {
+  background-color: rgba(255, 90, 112, 0.12);
+  color: #FF5A70;
+  border: 1px solid rgba(255, 90, 112, 0.3);
+}
+
+.badge-high {
+  background-color: rgba(245, 185, 78, 0.12);
+  color: #F5B94E;
+  border: 1px solid rgba(245, 185, 78, 0.3);
+}
+
+.badge-medium {
+  background-color: rgba(0, 183, 255, 0.12);
+  color: #00B7FF;
+  border: 1px solid rgba(0, 183, 255, 0.3);
+}
+
+.badge-low {
+  background-color: rgba(24, 217, 164, 0.12);
+  color: #18D9A4;
+  border: 1px solid rgba(24, 217, 164, 0.3);
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #08090d;
+  background: #0A101B;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e2230;
-  border-radius: 9999px;
+  background: #27364C;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #333a50;
+  background: #374a66;
 }
 
 /* Leaflet dark map styles */
 .leaflet-container {
-  background-color: #0a0c12 !important;
+  background-color: #0A101B !important;
   font-family: var(--font-sans) !important;
 }
 
 .leaflet-tile {
-  filter: brightness(0.78) invert(1) contrast(3.2) hue-rotate(205deg) saturate(0.25) brightness(0.68);
+  filter: brightness(0.72) invert(1) contrast(3.4) hue-rotate(200deg) saturate(0.2) brightness(0.65);
 }
 
 .leaflet-popup-content-wrapper {
-  background: #12141c !important;
-  color: #f1f5f9 !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.85) !important;
+  background: #131F30 !important;
+  color: #EAF2FF !important;
+  border: 1px solid #27364C !important;
+  border-radius: 6px !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.75) !important;
   padding: 0 !important;
   overflow: hidden;
 }
@@ -146,36 +248,6 @@ body {
 }
 
 .leaflet-popup-tip {
-  background: #12141c !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-}
-
-/* Custom pulses */
-@keyframes ping-subtle {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
-
-.ping-subtle {
-  animation: ping-subtle 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* Print styling */
-@media print {
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
-  .no-print {
-    display: none !important;
-  }
-  .print-only {
-    display: block !important;
-  }
+  background: #131F30 !important;
+  border: 1px solid #27364C !important;
 }

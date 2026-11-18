@@ -13,7 +13,12 @@ import { PRIORITY_COLORS } from '../utils/geo';
 
 export const PriorityDistributionChart = ({ clusters }) => {
   if (!clusters || clusters.length === 0) {
-    return <div className="h-64 flex items-center justify-center text-xs text-slate-500 font-sans">No sectors detected</div>;
+    return (
+      <div className="h-64 flex flex-col items-center justify-center text-xs text-[#98AAC2] font-mono">
+        <span>NO SECTORS IDENTIFIED</span>
+        <span className="text-[10px] text-slate-500 mt-1">Awaiting DBSCAN execution</span>
+      </div>
+    );
   }
 
   // Aggregate clusters by priority tier
@@ -35,22 +40,36 @@ export const PriorityDistributionChart = ({ clusters }) => {
   return (
     <div className="w-full h-64">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" vertical={false} />
-          <XAxis dataKey="tier" stroke="rgba(255, 255, 255, 0.15)" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'sans-serif' }} />
-          <YAxis stroke="rgba(255, 255, 255, 0.15)" tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }} allowDecimals={false} />
+        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="2 2" stroke="#27364C" vertical={false} />
+          <XAxis
+            dataKey="tier"
+            stroke="#27364C"
+            tick={{ fill: '#98AAC2', fontSize: 11, fontFamily: 'Inter, sans-serif' }}
+            axisLine={{ stroke: '#27364C' }}
+            tickLine={{ stroke: '#27364C' }}
+          />
+          <YAxis
+            stroke="#27364C"
+            tick={{ fill: '#98AAC2', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
+            axisLine={{ stroke: '#27364C' }}
+            tickLine={{ stroke: '#27364C' }}
+            allowDecimals={false}
+          />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#141722',
-              borderColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '10px',
+              backgroundColor: '#18263A',
+              borderColor: '#27364C',
+              borderRadius: '4px',
               fontSize: '12px',
-              color: '#e2e8f0',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+              color: '#EAF2FF',
+              fontFamily: 'Inter, sans-serif',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
             }}
-            cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+            formatter={(value) => [`${value} Sectors`, 'Count']}
+            cursor={{ fill: 'rgba(0, 183, 255, 0.05)' }}
           />
-          <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+          <Bar dataKey="count" radius={[2, 2, 0, 0]}>
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.fill} />
             ))}

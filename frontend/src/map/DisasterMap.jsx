@@ -1,13 +1,14 @@
-import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import React, { useEffect, useMemo, useState } from 'react';
+import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { useMission } from '../context/MissionContext';
 import { ClusterPolygonLayer } from './ClusterPolygonLayer';
 import { SignalMarkerLayer } from './SignalMarkerLayer';
 import { FlightPathLayer } from './FlightPathLayer';
 import { GroundTruthLayer } from './GroundTruthLayer';
-import { Layers, Eye } from 'lucide-react';
+import { formatCoords } from '../utils/geo';
+import { Layers, Compass, Crosshair } from 'lucide-react';
 
-// Sub-component to handle programmatically focusing map center
+// Programmatically center map
 const MapRecenter = ({ center, zoom }) => {
   const map = useMap();
   useEffect(() => {
@@ -15,6 +16,18 @@ const MapRecenter = ({ center, zoom }) => {
       map.setView(center, zoom || 14);
     }
   }, [center, zoom, map]);
+  return null;
+};
+
+// Coordinate tracker on mouse move
+const CoordinateTracker = ({ onMouseMove }) => {
+  useMapEvents({
+    mousemove(e) {
+      if (onMouseMove) {
+        onMouseMove(e.latlng);
+      }
+    },
+  });
   return null;
 };
 
@@ -36,6 +49,8 @@ export const DisasterMap = ({
     setSelectedCluster,
   } = useMission();
 
+  const [cursorCoords, setCursorCoords] = useState(null);
+
   const centerCoords = useMemo(() => {
     if (focusCoords && focusCoords[0]) return focusCoords;
     if (mission?.center_lat && mission?.center_lon) return [mission.center_lat, mission.center_lon];
@@ -48,7 +63,10 @@ export const DisasterMap = ({
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border border-slate-800 shadow-2xl bg-slate-950" style={{ height }}>
+    <div
+      className="relative w-full overflow-hidden rounded-md border border-[#27364C] bg-[#0A101B]"
+      style={{ height }}
+    >
       <MapContainer
         center={centerCoords}
         zoom={14}
@@ -56,6 +74,7 @@ export const DisasterMap = ({
         className="w-full h-full z-10"
       >
         <MapRecenter center={centerCoords} zoom={focusCoords ? 15 : 14} />
+        <CoordinateTracker onMouseMove={(latlng) => setCursorCoords(latlng)} />
 
         {/* Tactical Dark Matter Basemap */}
         <TileLayer
@@ -93,104 +112,116 @@ export const DisasterMap = ({
         />
       </MapContainer>
 
-      {/* Interactive Layer Toggle Overlay Toolbar */}
+      {/* Layer Toggle Toolbar */}
       {showControls && (
-        <div className="absolute top-3 right-3 z-20 bg-slate-950/90 backdrop-blur border border-slate-800 rounded-lg p-2.5 shadow-xl text-xs font-mono">
-          <div className="flex items-center gap-1.5 text-slate-400 font-bold mb-2 uppercase text-[10px] tracking-wider border-b border-slate-800 pb-1">
-            <Layers className="w-3.5 h-3.5 text-cyan-400" />
-            Tactical GIS Layers
+        <div className="absolute top-3 right-3 z-20 bg-[#0D1624]/90 backdrop-blur-xs border border-[#27364C] rounded p-2.5 shadow-lg text-xs font-mono select-none">
+          <div className="flex items-center gap-1.5 text-[#98AAC2] font-bold mb-2 uppercase text-[10px] tracking-wider border-b border-[#27364C] pb-1">
+            <Layers className="w-3.5 h-3.5 text-[#00B7FF]" />
+            GIS Layers
           </div>
 
           <div className="space-y-1.5">
-            <label className="flex items-center gap-2 text-slate-300 hover:text-slate-100 cursor-pointer">
+            <label className="flex items-center gap-2 text-[#EAF2FF] hover:text-[#00B7FF] cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeLayers.clusters}
                 onChange={() => toggleLayer('clusters')}
-                className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer"
+                className="rounded bg-[#18263A] border-[#27364C] text-[#00B7FF] focus:ring-0 cursor-pointer"
               />
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-cyan-400" /> DBSCAN Clusters
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#00B7FF]" /> DBSCAN Sectors
               </span>
             </label>
 
-            <label className="flex items-center gap-2 text-slate-300 hover:text-slate-100 cursor-pointer">
+            <label className="flex items-center gap-2 text-[#EAF2FF] hover:text-[#F5B94E] cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeLayers.thermal}
                 onChange={() => toggleLayer('thermal')}
-                className="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
+                className="rounded bg-[#18263A] border-[#27364C] text-[#F5B94E] focus:ring-0 cursor-pointer"
               />
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-amber-400" /> Thermal Signals
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#F5B94E]" /> Thermal Signals
               </span>
             </label>
 
-            <label className="flex items-center gap-2 text-slate-300 hover:text-slate-100 cursor-pointer">
+            <label className="flex items-center gap-2 text-[#EAF2FF] hover:text-[#00B7FF] cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeLayers.visual}
                 onChange={() => toggleLayer('visual')}
-                className="rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-0 cursor-pointer"
+                className="rounded bg-[#18263A] border-[#27364C] text-[#00B7FF] focus:ring-0 cursor-pointer"
               />
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-blue-400" /> Visual Detections
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#00B7FF]" /> Visual Detections
               </span>
             </label>
 
-            <label className="flex items-center gap-2 text-slate-300 hover:text-slate-100 cursor-pointer">
+            <label className="flex items-center gap-2 text-[#EAF2FF] hover:text-[#98AAC2] cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeLayers.noise}
                 onChange={() => toggleLayer('noise')}
-                className="rounded bg-slate-800 border-slate-700 text-slate-400 focus:ring-0 cursor-pointer"
+                className="rounded bg-[#18263A] border-[#27364C] text-[#98AAC2] focus:ring-0 cursor-pointer"
               />
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-slate-500" /> Spatial Noise (ID: -1)
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#98AAC2]" /> Spatial Noise (ID: -1)
               </span>
             </label>
 
-            <label className="flex items-center gap-2 text-slate-300 hover:text-slate-100 cursor-pointer">
+            <label className="flex items-center gap-2 text-[#EAF2FF] hover:text-[#18D9A4] cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeLayers.flightPath}
                 onChange={() => toggleLayer('flightPath')}
-                className="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer"
+                className="rounded bg-[#18263A] border-[#27364C] text-[#18D9A4] focus:ring-0 cursor-pointer"
               />
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" /> Drone Trajectory
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#18D9A4]" /> Drone Trajectory
               </span>
             </label>
 
-            <label className="flex items-center gap-2 text-slate-300 hover:text-slate-100 cursor-pointer">
+            <label className="flex items-center gap-2 text-[#EAF2FF] hover:text-[#FF5A70] cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeLayers.groundTruth}
                 onChange={() => toggleLayer('groundTruth')}
-                className="rounded bg-slate-800 border-slate-700 text-purple-500 focus:ring-0 cursor-pointer"
+                className="rounded bg-[#18263A] border-[#27364C] text-[#FF5A70] focus:ring-0 cursor-pointer"
               />
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-purple-400" /> Ground Truth Zones
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#FF5A70]" /> Ground Truth
               </span>
             </label>
           </div>
         </div>
       )}
 
-      {/* Map Legend Overlay at Bottom-Left */}
-      <div className="absolute bottom-3 left-3 z-20 bg-slate-950/85 backdrop-blur border border-slate-800 rounded px-3 py-1.5 text-[10px] font-mono text-slate-400 flex items-center gap-3">
-        <span className="font-bold text-slate-300 uppercase">Priority:</span>
-        <span className="flex items-center gap-1 text-red-400">
-          <span className="w-2 h-2 rounded-full bg-red-500" /> CRITICAL (≥90)
+      {/* Coordinate Readout Floating at Bottom-Right */}
+      <div className="absolute bottom-3 right-3 z-20 bg-[#0D1624]/90 backdrop-blur-xs border border-[#27364C] rounded px-2.5 py-1 text-[10px] font-mono text-[#98AAC2] flex items-center gap-2">
+        <Crosshair className="w-3 h-3 text-[#00B7FF]" />
+        <span>
+          {cursorCoords
+            ? formatCoords(cursorCoords.lat, cursorCoords.lng)
+            : formatCoords(centerCoords[0], centerCoords[1])}
         </span>
-        <span className="flex items-center gap-1 text-amber-400">
-          <span className="w-2 h-2 rounded-full bg-amber-500" /> HIGH (75-89)
+        <span className="text-[#27364C]">|</span>
+        <span className="text-[#EAF2FF]">WGS-84</span>
+      </div>
+
+      {/* Map Legend at Bottom-Left */}
+      <div className="absolute bottom-3 left-3 z-20 bg-[#0D1624]/90 backdrop-blur-xs border border-[#27364C] rounded px-3 py-1.5 text-[10px] font-mono text-[#98AAC2] flex items-center gap-3 select-none">
+        <span className="font-bold text-[#EAF2FF] uppercase">Priority:</span>
+        <span className="flex items-center gap-1 text-[#FF5A70]">
+          <span className="w-2 h-2 rounded-full bg-[#FF5A70]" /> CRITICAL (≥90)
         </span>
-        <span className="flex items-center gap-1 text-blue-400">
-          <span className="w-2 h-2 rounded-full bg-blue-500" /> MEDIUM (50-74)
+        <span className="flex items-center gap-1 text-[#F5B94E]">
+          <span className="w-2 h-2 rounded-full bg-[#F5B94E]" /> HIGH (75–89)
         </span>
-        <span className="flex items-center gap-1 text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" /> LOW (&lt;50)
+        <span className="flex items-center gap-1 text-[#00B7FF]">
+          <span className="w-2 h-2 rounded-full bg-[#00B7FF]" /> MEDIUM (50–74)
+        </span>
+        <span className="flex items-center gap-1 text-[#18D9A4]">
+          <span className="w-2 h-2 rounded-full bg-[#18D9A4]" /> LOW (&lt;50)
         </span>
       </div>
     </div>

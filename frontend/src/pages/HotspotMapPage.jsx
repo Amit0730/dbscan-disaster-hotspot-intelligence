@@ -3,8 +3,8 @@ import { useMission } from '../context/MissionContext';
 import { DisasterMap } from '../map/DisasterMap';
 import { TimeSlider } from '../components/TimeSlider';
 import { DronePathPlayer } from '../components/DronePathPlayer';
-import { ClusterDetailModal } from '../components/ClusterDetailModal';
-import { TacticalBadge } from '../components/TacticalBadge';
+import { ClusterInspectorDrawer } from '../components/ClusterInspectorDrawer';
+import { SeverityBadge } from '../components/SeverityBadge';
 import { formatCoords } from '../utils/geo';
 import {
   MapPin,
@@ -17,6 +17,7 @@ import {
   Shield,
   Eye,
   Radio,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export const HotspotMapPage = () => {
@@ -27,103 +28,131 @@ export const HotspotMapPage = () => {
     selectedCluster,
     setSelectedCluster,
     timeFilterMinutes,
+    stats,
   } = useMission();
 
   const [activeDroneWpIndex, setActiveDroneWpIndex] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleClusterSelect = (cluster) => {
     setSelectedCluster(cluster);
-    setModalOpen(true);
+    setDrawerOpen(true);
   };
 
+  const totalDetections = stats?.total_signals || visibleSignals.length || 385;
+  const criticalCount =
+    stats?.critical_hotspots ??
+    clusters.filter((c) => c.classification === 'CRITICAL').length;
+
   return (
-    <div className="p-4 sm:p-6 lg:p-7 space-y-5 max-w-[1600px] mx-auto">
-      {/* Top Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-lg font-bold text-slate-100 tracking-tight">
-              Tactical Geospatial Hotspot Map
-            </h1>
-            <TacticalBadge variant="active">Fullscreen GIS</TacticalBadge>
+    <div className="p-3 sm:p-5 lg:p-6 space-y-4 max-w-[1700px] mx-auto text-[#EAF2FF]">
+      {/* Top Tactical Command Bar */}
+      <div className="p-3.5 rounded-md bg-[#131F30] border border-[#27364C] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded bg-[#18263A] border border-[#27364C] flex items-center justify-center text-[#00B7FF]">
+            <MapPin className="w-4 h-4" />
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Dynamic Leaflet GIS interface displaying multi-sensor detections, geodesic DBSCAN polygons, and synchronized flight path replay.
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-[#EAF2FF] tracking-tight">
+                Tactical GIS Hotspot Map
+              </h1>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#00B7FF]/10 text-[#00B7FF] border border-[#00B7FF]/30 font-semibold">
+                FULL VIEWPORT
+              </span>
+            </div>
+            <div className="text-[11px] text-[#98AAC2]">
+              Sector 4 · Urban Collapse Zone (38.3550° N, 37.8550° E) · Haversine DBSCAN Clusters
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5 text-xs font-mono">
-          <div className="px-3 py-1.5 rounded-lg bg-[#11131a] border border-white/[0.08] text-slate-300">
-            Visible Signals: <strong className="text-sky-400 tabular-nums">{visibleSignals.length}</strong>
+        {/* Operational Counters */}
+        <div className="flex items-center gap-2">
+          <div className="px-2.5 py-1 rounded bg-[#18263A] border border-[#27364C]">
+            <span className="text-[#98AAC2]">Signals:</span>{' '}
+            <strong className="text-[#00B7FF]">{visibleSignals.length}</strong> / {totalDetections}
           </div>
-          <div className="px-3 py-1.5 rounded-lg bg-[#11131a] border border-white/[0.08] text-slate-300">
-            Detected Hotspots: <strong className="text-amber-400 tabular-nums">{clusters.length}</strong>
+          <div className="px-2.5 py-1 rounded bg-[#18263A] border border-[#27364C]">
+            <span className="text-[#98AAC2]">Sectors:</span>{' '}
+            <strong className="text-[#EAF2FF]">{clusters.length}</strong>
+          </div>
+          <div className="px-2.5 py-1 rounded bg-[#FF5A70]/10 border border-[#FF5A70]/30 text-[#FF5A70]">
+            <span>Critical:</span> <strong>{criticalCount}</strong>
           </div>
         </div>
       </div>
 
-      {/* Main Full-Scale Map */}
-      <div className="rounded-xl overflow-hidden border border-white/[0.08] shadow-xl">
+      {/* Main Dominant Map */}
+      <div className="rounded-md overflow-hidden border border-[#27364C] shadow-xl">
         <DisasterMap
           height="620px"
           activeDroneWaypointIndex={activeDroneWpIndex}
           onClusterSelect={handleClusterSelect}
+          showControls={true}
         />
       </div>
 
-      {/* Synchronized Drone Playback & Timeline Controls */}
+      {/* Timeline & Drone Replay Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <TimeSlider />
-        <DronePathPlayer
-          currentWaypointIndex={activeDroneWpIndex}
-          onStepChange={(idx) => setActiveDroneWpIndex(idx)}
-        />
+        <div className="rounded-md bg-[#131F30] border border-[#27364C] p-3">
+          <TimeSlider />
+        </div>
+        <div className="rounded-md bg-[#131F30] border border-[#27364C] p-3">
+          <DronePathPlayer
+            currentWaypointIndex={activeDroneWpIndex}
+            onStepChange={(idx) => setActiveDroneWpIndex(idx)}
+          />
+        </div>
       </div>
 
-      {/* Quick Cluster Selector Strip */}
-      <div className="pro-card p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
-            <MapPin className="w-3.5 h-3.5 text-sky-400" />
-            <span>Quick Hotspot Focus Selector</span>
-          </h3>
-          <span className="text-[11px] text-slate-500">
-            Click to inspect multi-sensor triage breakdown
+      {/* Quick Sector Selector Grid */}
+      <div className="rounded-md bg-[#131F30] border border-[#27364C] p-3.5 space-y-2.5">
+        <div className="flex items-center justify-between border-b border-[#27364C] pb-2 text-xs font-mono">
+          <span className="text-[#98AAC2] uppercase tracking-wider">
+            Quick Sector Focus & Inspector
+          </span>
+          <span className="text-[11px] text-[#98AAC2]">
+            Click any sector to open operational triage breakdown
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-          {clusters.map((c, i) => (
-            <button
-              key={c.id}
-              onClick={() => handleClusterSelect(c)}
-              className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-sky-500/40 hover:bg-white/[0.04] text-left transition-all cursor-pointer group"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-200 group-hover:text-sky-300">
-                  Sector {c.cluster_label + 1}
-                </span>
-                <TacticalBadge variant={c.classification}>{c.classification}</TacticalBadge>
-              </div>
-              <div className="text-sm font-bold font-mono text-sky-400 mt-1 tabular-nums">
-                {c.priority_score} <span className="text-[10px] text-slate-500 font-normal">pts</span>
-              </div>
-              <div className="text-[11px] font-mono text-slate-400 mt-1 truncate">
-                {c.signal_count} signals &bull; {c.cluster_density}/km²
-              </div>
-            </button>
-          ))}
+          {clusters.map((c) => {
+            const isSelected = selectedCluster?.cluster_id === c.cluster_id;
+            return (
+              <button
+                key={c.cluster_id}
+                onClick={() => handleClusterSelect(c)}
+                className={`p-3 rounded text-left transition-colors cursor-pointer border ${
+                  isSelected
+                    ? 'bg-[#18263A] border-[#00B7FF] shadow-sm'
+                    : 'bg-[#18263A]/60 border-[#27364C] hover:border-[#384f6f] hover:bg-[#18263A]'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="font-bold text-[#EAF2FF]">Sector #{c.cluster_id}</span>
+                  <SeverityBadge severity={c.classification} size="sm" />
+                </div>
+                <div className="text-base font-bold font-mono text-[#EAF2FF] mt-1 tabular-nums">
+                  {Math.round(c.priority_score)}{' '}
+                  <span className="text-[10px] text-[#98AAC2] font-normal">pts</span>
+                </div>
+                <div className="text-[11px] font-mono text-[#98AAC2] mt-1 truncate">
+                  {c.signal_count} signals · {Math.round(c.density || 0)} pts/km²
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Cluster Inspector Modal */}
-      {modalOpen && selectedCluster && (
-        <ClusterDetailModal
-          cluster={selectedCluster}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+      {/* Cluster Inspector Drawer */}
+      <ClusterInspectorDrawer
+        cluster={selectedCluster}
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
     </div>
   );
 };

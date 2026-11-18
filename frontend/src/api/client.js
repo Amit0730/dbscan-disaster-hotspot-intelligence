@@ -71,7 +71,10 @@ export const api = {
   getCurrentMission: async () => {
     try {
       const res = await fetch(`${API_BASE}/missions/current`);
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        return { ...data, _isLiveBackend: true };
+      }
     } catch {
       // Fallback
     }
@@ -79,13 +82,14 @@ export const api = {
     initLocalState();
     return {
       id: 'demo-mission-sih26030',
-      name: 'Operation Aegis: Sector-7 Disaster Reconnaissance',
+      name: 'Operation Aegis: Sector-4 Disaster Reconnaissance',
       description: 'Simulated multi-sensor drone survey over an urban earthquake and structural collapse zone.',
       status: 'ACTIVE',
       source: 'DEMO',
       center_lat: 38.355,
       center_lon: 37.855,
       created_at: new Date().toISOString(),
+      _isLiveBackend: false,
       stats: {
         total_images: 40,
         total_signals: localSignals.length,

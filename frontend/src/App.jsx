@@ -20,17 +20,21 @@ import { ProfilePage } from './pages/ProfilePage';
 // Protected Route Guard Component
 const ProtectedLayout = ({ children }) => {
   const { isAuthenticated } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <Navbar />
-      <div className="flex-1 flex">
-        <Sidebar />
-        <main className="flex-1 min-w-0 bg-slate-950 overflow-y-auto">
+    <div className="min-h-screen bg-[#0A101B] text-[#EAF2FF] flex flex-col font-sans">
+      <Navbar onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)} />
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar
+          isMobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+        />
+        <main className="flex-1 min-w-0 bg-[#0A101B] overflow-y-auto">
           {children}
         </main>
       </div>

@@ -137,6 +137,9 @@ export const MissionProvider = ({ children }) => {
     setActiveLayers((prev) => ({ ...prev, [layerKey]: !prev[layerKey] }));
   };
 
+  const isLiveBackend = Boolean(mission?._isLiveBackend);
+  const dataFreshness = mission?.updated_at || mission?.created_at || (mission?.stats?.last_processed) || null;
+
   const value = {
     mission,
     stats,
@@ -163,6 +166,8 @@ export const MissionProvider = ({ children }) => {
     loadDemoMission: handleLoadDemoMission,
     runDBSCAN: handleRunDBSCAN,
     runValidation: handleRunValidation,
+    isLiveBackend,
+    dataFreshness,
   };
 
   return <MissionContext.Provider value={value}>{children}</MissionContext.Provider>;

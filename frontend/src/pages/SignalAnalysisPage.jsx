@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useMission } from '../context/MissionContext';
-import { TacticalBadge } from '../components/TacticalBadge';
+import { SeverityBadge } from '../components/SeverityBadge';
 import { formatCoords, formatPercentage } from '../utils/geo';
 import { TemporalDetectionChart } from '../charts/TemporalDetectionChart';
 import {
@@ -16,7 +16,9 @@ import {
   AlertTriangle,
   Info,
   Layers,
-  Sparkles,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 export const SignalAnalysisPage = () => {
@@ -24,26 +26,53 @@ export const SignalAnalysisPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClusterFilter, setSelectedClusterFilter] = useState('ALL');
   const [minThermalFilter, setMinThermalFilter] = useState(0);
+  const [sortField, setSortField] = useState('thermal_score');
+  const [sortAsc, setSortAsc] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(false);
+    }
+  };
 
   const filteredSignals = useMemo(() => {
-    return signals.filter((sig) => {
-      const matchSearch =
-        sig.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (sig.image_id && sig.image_id.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (sig.ground_truth_priority && sig.ground_truth_priority.toLowerCase().includes(searchTerm.toLowerCase()));
+    return signals
+      .filter((sig) => {
+        const matchSearch =
+          (sig.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (sig.image_id && sig.image_id.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (sig.ground_truth_priority && sig.ground_truth_priority.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchCluster =
-        selectedClusterFilter === 'ALL'
-          ? true
-          : selectedClusterFilter === 'NOISE'
-          ? sig.cluster_id === -1
-          : sig.cluster_id === parseInt(selectedClusterFilter, 10);
+        const matchCluster =
+          selectedClusterFilter === 'ALL'
+            ? true
+            : selectedClusterFilter === 'NOISE'
+            ? sig.cluster_id === -1
+            : sig.cluster_id === parseInt(selectedClusterFilter, 10);
 
-      const matchThermal = sig.thermal_score * 100 >= minThermalFilter;
+        const matchThermal = (sig.thermal_score || 0) * 100 >= minThermalFilter;
 
-      return matchSearch && matchCluster && matchThermal;
-    });
-  }, [signals, searchTerm, selectedClusterFilter, minThermalFilter]);
+        return matchSearch && matchCluster && matchThermal;
+      })
+      .sort((a, b) => {
+        const valA = a[sortField] ?? 0;
+        const valB = b[sortField] ?? 0;
+        if (valA < valB) return sortAsc ? -1 : 1;
+        if (valA > valB) return sortAsc ? 1 : -1;
+        return 0;
+      });
+  }, [signals, searchTerm, selectedClusterFilter, minThermalFilter, sortField, sortAsc]);
+
+  const totalPages = Math.ceil(filteredSignals.length / pageSize) || 1;
+  const paginatedSignals = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredSignals.slice(start, start + pageSize);
+  }, [filteredSignals, currentPage]);
 
   const handleExportCSV = () => {
     const headers = [
@@ -61,262 +90,280 @@ export const SignalAnalysisPage = () => {
       'vehicle_probability',
       'confidence',
       'cluster_id',
-      'ground_truth_priority',
     ];
 
     const rows = filteredSignals.map((s) => [
       s.id,
       s.lat,
       s.lon,
-      s.altitude,
-      s.timestamp,
-      s.temperature,
-      s.thermal_anomaly,
-      s.thermal_score,
-      s.person_probability,
-      s.debris_probability,
-      s.damage_probability,
-      s.vehicle_probability,
-      s.confidence,
+      s.altitude || 100,
+      s.timestamp || '',
+      s.temperature || 37.0,
+      s.thermal_anomaly ? 1 : 0,
+      (s.thermal_score || 0).toFixed(3),
+      (s.person_probability || 0).toFixed(3),
+      (s.debris_probability || 0).toFixed(3),
+      (s.damage_probability || 0).toFixed(3),
+      (s.vehicle_probability || 0).toFixed(3),
+      (s.confidence || 0).toFixed(3),
       s.cluster_id,
-      s.ground_truth_priority,
     ]);
 
     const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-
+      'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `disaster_signals_export_${Date.now()}.csv`);
+    link.setAttribute('download', `aegis_signal_telemetry_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const highThermalCount = signals.filter((s) => (s.thermal_score || 0) >= 0.7).length;
+  const humanConfidenceCount = signals.filter((s) => (s.person_probability || 0) >= 0.6).length;
+  const clusteredCount = signals.filter((s) => s.cluster_id !== -1).length;
+  const noiseCount = signals.filter((s) => s.cluster_id === -1).length;
+
   return (
-    <div className="p-4 sm:p-6 lg:p-7 space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto text-[#EAF2FF]">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#27364C]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-lg font-bold text-slate-100 tracking-tight">
-              Multi-Sensor Signal Feature Telemetry
-            </h1>
-            <TacticalBadge variant="cyan">{signals.length} Standardized Records</TacticalBadge>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono tracking-widest text-[#00B7FF] uppercase">
+              Telemetry Records
+            </span>
+            <span className="text-[#27364C]">•</span>
+            <span className="text-[10px] font-mono text-[#98AAC2]">Raw Drone Observations</span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Geo-tagged radiometric thermal anomalies and visual detector probability tensors extracted from drone surveys.
+          <h1 className="text-xl font-bold text-[#EAF2FF] tracking-tight mt-0.5">
+            Signal Telemetry & Radiometric Vector Analysis
+          </h1>
+          <p className="text-xs text-[#98AAC2] mt-0.5">
+            Full record of individual drone detections across FLIR radiometric thermal, optical computer vision, and coordinate points.
           </p>
         </div>
-
-        <button
-          onClick={handleExportCSV}
-          className="px-3.5 py-2 text-xs font-medium rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-sky-300 border border-sky-500/25 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span>Export Filtered CSV</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleExportCSV}
+            disabled={signals.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#18263A] hover:bg-[#1f324d] text-xs font-mono text-[#EAF2FF] border border-[#27364C] rounded transition disabled:opacity-50"
+          >
+            <Download className="w-3.5 h-3.5 text-[#00B7FF]" />
+            Export Telemetry (CSV)
+          </button>
+        </div>
       </div>
 
-      {/* Operational Disclaimer */}
-      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-3">
-        <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
-        <div className="space-y-1">
-          <span className="font-semibold text-amber-200">
-            Signal Interpretation Protocol:
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="pro-card p-4">
+          <div className="text-[10px] font-mono tracking-wider text-[#98AAC2] uppercase">Total Detections</div>
+          <div className="text-2xl font-mono font-bold text-[#EAF2FF] mt-1">{signals.length}</div>
+          <div className="text-[11px] text-[#98AAC2] mt-1 font-mono">Geotagged Points</div>
+        </div>
+        <div className="pro-card p-4">
+          <div className="text-[10px] font-mono tracking-wider text-[#F5B94E] uppercase">Thermal Anomalies (≥70%)</div>
+          <div className="text-2xl font-mono font-bold text-[#F5B94E] mt-1">{highThermalCount}</div>
+          <div className="text-[11px] text-[#98AAC2] mt-1 font-mono">
+            {signals.length > 0 ? formatPercentage(highThermalCount / signals.length) : '0%'} of signals
+          </div>
+        </div>
+        <div className="pro-card p-4">
+          <div className="text-[10px] font-mono tracking-wider text-[#00B7FF] uppercase">Human Detection (≥60%)</div>
+          <div className="text-2xl font-mono font-bold text-[#00B7FF] mt-1">{humanConfidenceCount}</div>
+          <div className="text-[11px] text-[#98AAC2] mt-1 font-mono">Visual Detector Hits</div>
+        </div>
+        <div className="pro-card p-4">
+          <div className="text-[10px] font-mono tracking-wider text-[#18D9A4] uppercase">Clustered vs Noise</div>
+          <div className="text-2xl font-mono font-bold text-[#18D9A4] mt-1">
+            {clusteredCount} <span className="text-xs text-[#98AAC2] font-normal">/ {noiseCount} noise</span>
+          </div>
+          <div className="text-[11px] text-[#98AAC2] mt-1 font-mono">Spatial Core Partition</div>
+        </div>
+      </div>
+
+      {/* Temporal Distribution Chart */}
+      <div className="pro-card p-5">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#27364C]">
+          <div>
+            <h2 className="text-xs font-mono font-semibold tracking-wider text-[#EAF2FF] uppercase">
+              Temporal Signal Ingestion Stream
+            </h2>
+            <p className="text-[11px] text-[#98AAC2] mt-0.5">
+              Hourly detection frequency comparing thermal anomalies against optical observations
+            </p>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#18263A] text-[#00B7FF] border border-[#27364C]">
+            Mission Timeline
           </span>
-          <p className="text-amber-300/80 leading-relaxed text-[11px] font-sans">
-            Thermal signatures indicate local temperature deviations that may stem from humans, solar-heated concrete, cooling vehicle engines, or ruptured utilities. Signals are classified as <strong>Potential Human Signals</strong> to aid tactical search prioritization.
-          </p>
         </div>
-      </div>
-
-      {/* Dual Sensor Extraction Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Thermal Extraction Card */}
-        <div className="pro-card p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-amber-400 flex items-center gap-2">
-              <Flame className="w-4 h-4" />
-              <span>Radiometric Thermal Feature Pipeline</span>
-            </h3>
-            <span className="text-[11px] font-mono text-slate-400">15°C – 50°C</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed font-sans">
-            Extracts radiometric variance from thermal frames, computing localized temperature gradients normalized between 0.0 and 1.0.
-          </p>
-          <div className="grid grid-cols-3 gap-2 pt-1 text-center text-xs font-mono">
-            <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-slate-500 text-[10px] block">Mean Temp</span>
-              <strong className="text-amber-400 font-bold tabular-nums">29.4°C</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-slate-500 text-[10px] block">Peak Anomaly</span>
-              <strong className="text-rose-400 font-bold tabular-nums">48.5°C</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-slate-500 text-[10px] block">Model Weight</span>
-              <strong className="text-sky-400 font-bold">35%</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Visual Multi-class Extraction Card */}
-        <div className="pro-card p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-sky-400 flex items-center gap-2">
-              <Radio className="w-4 h-4" />
-              <span>Visual Multi-Class Feature Pipeline</span>
-            </h3>
-            <span className="text-[11px] font-mono text-slate-400">Confidence: 0.75 – 0.98</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed font-sans">
-            Evaluates multi-class probabilities for person silhouette contours, structural debris density, and vehicle presence.
-          </p>
-          <div className="grid grid-cols-4 gap-2 pt-1 text-center text-xs font-mono">
-            <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-slate-500 text-[10px] block">Person</span>
-              <strong className="text-sky-400 font-bold">30%</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-slate-500 text-[10px] block">Debris</span>
-              <strong className="text-amber-400 font-bold">15%</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-slate-500 text-[10px] block">Damage</span>
-              <strong className="text-indigo-400 font-bold">10%</strong>
-            </div>
-            <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-slate-500 text-[10px] block">Density</span>
-              <strong className="text-emerald-400 font-bold">10%</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Temporal Detection Activity Chart */}
-      <div className="pro-card p-5 space-y-3">
-        <h3 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
-          <Layers className="w-4 h-4 text-sky-400" />
-          <span>Sensor Detections Along Survey Timeline (08:00 – 18:00)</span>
-        </h3>
         <TemporalDetectionChart signals={signals} />
       </div>
 
-      {/* Standardized Signal Dataset Table */}
-      <div className="pro-card p-5 space-y-4">
-        {/* Table Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-1 max-w-sm">
-            <div className="relative w-full">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search by Signal ID, Image ID, GT Zone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#0c0d12] border border-white/[0.08] rounded-lg pl-8.5 pr-3 py-1.5 text-xs font-sans text-slate-200 placeholder:text-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 focus:outline-none transition-colors"
-              />
-            </div>
+      {/* Telemetry Filter & Table View */}
+      <div className="pro-card p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#27364C]">
+          <div>
+            <h2 className="text-xs font-mono font-semibold tracking-wider text-[#EAF2FF] uppercase">
+              Individual Signal Telemetry Log
+            </h2>
+            <p className="text-[11px] text-[#98AAC2] mt-0.5">
+              Displaying {filteredSignals.length} of {signals.length} recorded signals
+            </p>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-slate-400">Sector:</span>
-              <select
-                value={selectedClusterFilter}
-                onChange={(e) => setSelectedClusterFilter(e.target.value)}
-                className="bg-[#0c0d12] border border-white/[0.08] rounded-lg px-2.5 py-1 text-slate-200 text-xs cursor-pointer focus:border-sky-500 focus:outline-none"
-              >
-                <option value="ALL">All Signals ({signals.length})</option>
-                <option value="NOISE">Spatial Noise (-1)</option>
-                {clusters.map((c) => (
-                  <option key={c.id} value={c.cluster_label}>
-                    Sector #{c.cluster_label + 1} ({c.signal_count} pts)
-                  </option>
-                ))}
-              </select>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-[#98AAC2] absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search signal ID..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-8 pr-3 py-1 bg-[#18263A] border border-[#27364C] rounded text-xs font-mono text-[#EAF2FF] placeholder-[#98AAC2] focus:outline-none focus:border-[#00B7FF] w-48"
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">Min Thermal:</span>
-              <span className="text-amber-400 font-bold font-mono tabular-nums">{minThermalFilter}%</span>
+            <select
+              value={selectedClusterFilter}
+              onChange={(e) => {
+                setSelectedClusterFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-[#18263A] border border-[#27364C] rounded text-xs font-mono text-[#EAF2FF] px-2.5 py-1 focus:outline-none focus:border-[#00B7FF]"
+            >
+              <option value="ALL">All Sectors</option>
+              <option value="NOISE">Noise Only (Cluster -1)</option>
+              {clusters.map((c) => (
+                <option key={c.cluster_label} value={c.cluster_label}>
+                  Sector {c.cluster_label + 1}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-1.5 bg-[#18263A] border border-[#27364C] rounded px-2.5 py-1 text-xs font-mono text-[#98AAC2]">
+              <span>Min Thermal:</span>
+              <span className="text-[#F5B94E] font-bold">{minThermalFilter}%</span>
               <input
                 type="range"
                 min="0"
-                max="90"
+                max="100"
                 step="10"
                 value={minThermalFilter}
-                onChange={(e) => setMinThermalFilter(Number(e.target.value))}
-                className="w-20 accent-amber-400 cursor-pointer h-1.5 bg-white/[0.1] rounded"
+                onChange={(e) => {
+                  setMinThermalFilter(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="w-16 accent-[#F5B94E] cursor-pointer h-1.5 bg-[#27364C] rounded"
               />
             </div>
           </div>
         </div>
 
-        {/* Signals Table */}
-        <div className="overflow-x-auto border border-white/[0.07] rounded-lg max-h-[500px]">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-white/[0.03] text-slate-400 uppercase text-[10px] font-mono border-b border-white/[0.07] sticky top-0 z-10 backdrop-blur">
-              <tr>
-                <th className="p-3">Signal ID</th>
-                <th className="p-3">Coordinates (Lat, Lon)</th>
-                <th className="p-3">Temp (°C)</th>
-                <th className="p-3">Thermal Score</th>
-                <th className="p-3">Human Prob</th>
-                <th className="p-3">Debris Prob</th>
-                <th className="p-3">Damage Prob</th>
-                <th className="p-3">Confidence</th>
-                <th className="p-3">Assignment</th>
+        {/* Dense Table */}
+        <div className="overflow-x-auto mt-4">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-[#27364C] text-[10px] font-mono text-[#98AAC2] uppercase tracking-wider">
+                <th className="py-2.5 px-3">Signal ID</th>
+                <th className="py-2.5 px-3 cursor-pointer hover:text-[#00B7FF]" onClick={() => handleSort('cluster_id')}>
+                  <div className="flex items-center gap-1">
+                    Sector
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </th>
+                <th className="py-2.5 px-3">Coordinates (WGS-84)</th>
+                <th className="py-2.5 px-3 cursor-pointer hover:text-[#00B7FF]" onClick={() => handleSort('thermal_score')}>
+                  <div className="flex items-center gap-1">
+                    Thermal Score
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </th>
+                <th className="py-2.5 px-3 cursor-pointer hover:text-[#00B7FF]" onClick={() => handleSort('person_probability')}>
+                  <div className="flex items-center gap-1">
+                    Person Prob
+                    <ArrowUpDown className="w-3 h-3" />
+                  </div>
+                </th>
+                <th className="py-2.5 px-3">Debris / Damage</th>
+                <th className="py-2.5 px-3">Vehicle</th>
+                <th className="py-2.5 px-3">Timestamp</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.05] bg-[#11131a]/40 font-mono text-[11px]">
-              {filteredSignals.length === 0 ? (
+            <tbody className="divide-y divide-[#27364C]/50 font-mono">
+              {paginatedSignals.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="p-8 text-center text-slate-500 font-sans">
-                    No signals matched your criteria.
+                  <td colSpan={8} className="py-8 text-center text-[#98AAC2]">
+                    No signals matched the selected query.
                   </td>
                 </tr>
               ) : (
-                filteredSignals.slice(0, 100).map((sig) => {
-                  const isNoise = sig.cluster_id === -1;
-                  return (
-                    <tr key={sig.id} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="p-3 font-semibold text-slate-200">{sig.id}</td>
-                      <td className="p-3 text-slate-400">{formatCoords(sig.lat, sig.lon)}</td>
-                      <td className="p-3 font-bold text-amber-400 tabular-nums">{sig.temperature}°C</td>
-                      <td className="p-3 text-amber-300 tabular-nums">{formatPercentage(sig.thermal_score)}</td>
-                      <td className="p-3 text-sky-400 tabular-nums">{formatPercentage(sig.person_probability)}</td>
-                      <td className="p-3 text-orange-400 tabular-nums">{formatPercentage(sig.debris_probability)}</td>
-                      <td className="p-3 text-purple-400 tabular-nums">{formatPercentage(sig.damage_probability)}</td>
-                      <td className="p-3 text-slate-300 tabular-nums">{formatPercentage(sig.confidence)}</td>
-                      <td className="p-3">
-                        {isNoise ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/[0.05] text-slate-400 border border-white/[0.08]">
-                            Noise (-1)
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-sky-500/10 text-sky-300 border border-sky-500/25 font-semibold">
-                            Sector #{sig.cluster_id + 1}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
+                paginatedSignals.map((sig) => (
+                  <tr key={sig.id} className="hover:bg-[#18263A]/80 transition">
+                    <td className="py-2.5 px-3 text-[#EAF2FF] font-medium">
+                      {sig.id}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      {sig.cluster_id === -1 ? (
+                        <SeverityBadge severity="NOISE" />
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#00B7FF]/10 text-[#00B7FF] border border-[#00B7FF]/20">
+                          Sector {sig.cluster_id + 1}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-[#98AAC2] text-[11px]">
+                      {formatCoords(sig.lat, sig.lon)}
+                    </td>
+                    <td className="py-2.5 px-3 text-[#F5B94E] font-bold">
+                      {formatPercentage(sig.thermal_score || 0)}
+                    </td>
+                    <td className="py-2.5 px-3 text-[#00B7FF]">
+                      {formatPercentage(sig.person_probability || 0)}
+                    </td>
+                    <td className="py-2.5 px-3 text-[#98AAC2]">
+                      {formatPercentage(sig.debris_probability || 0)} / {formatPercentage(sig.damage_probability || 0)}
+                    </td>
+                    <td className="py-2.5 px-3 text-[#98AAC2]">
+                      {formatPercentage(sig.vehicle_probability || 0)}
+                    </td>
+                    <td className="py-2.5 px-3 text-[11px] text-[#98AAC2]">
+                      {sig.timestamp ? new Date(sig.timestamp).toLocaleTimeString() : '—'}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
-        {filteredSignals.length > 100 && (
-          <p className="text-[11px] text-slate-500 text-center font-sans">
-            Showing first 100 of {filteredSignals.length} filtered signals. Export CSV for the complete telemetry stream.
-          </p>
-        )}
+        {/* Pagination Bar */}
+        <div className="flex items-center justify-between pt-4 mt-2 border-t border-[#27364C] text-xs font-mono text-[#98AAC2]">
+          <div>
+            Page {currentPage} of {totalPages} ({filteredSignals.length} records)
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1 rounded bg-[#18263A] hover:bg-[#1f324d] text-[#EAF2FF] disabled:opacity-40"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1 rounded bg-[#18263A] hover:bg-[#1f324d] text-[#EAF2FF] disabled:opacity-40"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
