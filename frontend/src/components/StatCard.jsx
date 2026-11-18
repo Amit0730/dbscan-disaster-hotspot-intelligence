@@ -3,44 +3,70 @@ import { motion } from 'framer-motion';
 
 export const StatCard = ({ title, value, subtitle, icon: Icon, color = 'cyan', badge = null, onClick }) => {
   const colorMap = {
-    cyan: 'border-cyan-500/30 text-cyan-400 bg-cyan-950/20 group-hover:border-cyan-500/60',
-    red: 'border-red-500/30 text-red-400 bg-red-950/20 group-hover:border-red-500/60',
-    amber: 'border-amber-500/30 text-amber-400 bg-amber-950/20 group-hover:border-amber-500/60',
-    emerald: 'border-emerald-500/30 text-emerald-400 bg-emerald-950/20 group-hover:border-emerald-500/60',
-    purple: 'border-purple-500/30 text-purple-400 bg-purple-950/20 group-hover:border-purple-500/60',
+    cyan: {
+      borderHover: 'hover:border-sky-500/40',
+      iconBg: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+      glow: 'group-hover:bg-sky-500/[0.02]',
+    },
+    red: {
+      borderHover: 'hover:border-rose-500/40',
+      iconBg: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+      glow: 'group-hover:bg-rose-500/[0.02]',
+    },
+    amber: {
+      borderHover: 'hover:border-amber-500/40',
+      iconBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+      glow: 'group-hover:bg-amber-500/[0.02]',
+    },
+    emerald: {
+      borderHover: 'hover:border-emerald-500/40',
+      iconBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      glow: 'group-hover:bg-emerald-500/[0.02]',
+    },
+    purple: {
+      borderHover: 'hover:border-indigo-500/40',
+      iconBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+      glow: 'group-hover:bg-indigo-500/[0.02]',
+    },
   };
 
-  const selectedColor = colorMap[color] || colorMap.cyan;
+  const scheme = colorMap[color] || colorMap.cyan;
 
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
       onClick={onClick}
-      className={`group relative overflow-hidden bg-slate-900/80 backdrop-blur border rounded-lg p-4 shadow-lg transition-all ${
-        onClick ? 'cursor-pointer' : ''
-      } ${selectedColor}`}
+      className={`group relative overflow-hidden bg-[#11131a] border border-white/[0.07] rounded-xl p-4.5 transition-all duration-200 ${
+        onClick ? 'cursor-pointer hover:bg-[#141722]' : ''
+      } ${scheme.borderHover} ${scheme.glow}`}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">{title}</p>
-          <h3 className="text-2xl font-bold font-mono text-slate-100 mt-1 tracking-tight">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-[11px] font-medium tracking-wider text-slate-400 uppercase font-mono">
+            {title}
+          </p>
+          <div className="text-2xl font-bold font-mono text-slate-100 tracking-tight tabular-nums">
             {value ?? '--'}
-          </h3>
-          {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+          </div>
+          {subtitle && (
+            <p className="text-[11px] text-slate-500 font-normal leading-tight">
+              {subtitle}
+            </p>
+          )}
         </div>
         {Icon && (
-          <div className={`p-2.5 rounded-md border ${selectedColor}`}>
-            <Icon className="w-5 h-5" />
+          <div className={`p-2.5 rounded-lg border shrink-0 transition-transform group-hover:scale-105 ${scheme.iconBg}`}>
+            <Icon className="w-4.5 h-4.5" />
           </div>
         )}
       </div>
 
-      {badge && <div className="mt-3 pt-2 border-t border-slate-800 flex items-center">{badge}</div>}
-
-      {/* Tactical corner accents */}
-      <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-slate-600 opacity-40 group-hover:opacity-100 transition-opacity" />
-      <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-slate-600 opacity-40 group-hover:opacity-100 transition-opacity" />
+      {badge && (
+        <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center">
+          {badge}
+        </div>
+      )}
     </motion.div>
   );
 };

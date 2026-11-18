@@ -15,6 +15,7 @@ import { DbscanClusteringPage } from './pages/DbscanClusteringPage';
 import { ClusterAnalyticsPage } from './pages/ClusterAnalyticsPage';
 import { ValidationPage } from './pages/ValidationPage';
 import { SystemInfoPage } from './pages/SystemInfoPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 // Protected Route Guard Component
 const ProtectedLayout = ({ children }) => {
@@ -118,6 +119,14 @@ const AuthGate = () => {
         element={
           <ProtectedLayout>
             <SystemInfoPage />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedLayout>
+            <ProfilePage />
           </ProtectedLayout>
         }
       />

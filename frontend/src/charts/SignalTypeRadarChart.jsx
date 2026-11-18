@@ -11,7 +11,7 @@ import {
 
 export const SignalTypeRadarChart = ({ clusters }) => {
   if (!clusters || clusters.length === 0) {
-    return <div className="h-64 flex items-center justify-center text-xs font-mono text-slate-500">No cluster telemetry</div>;
+    return <div className="h-64 flex items-center justify-center text-xs text-slate-500 font-sans">No cluster telemetry</div>;
   }
 
   // Calculate overall dataset mean feature values
@@ -41,25 +41,32 @@ export const SignalTypeRadarChart = ({ clusters }) => {
     <div className="w-full h-64">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
-          <PolarGrid stroke="#1e293b" />
-          <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }} />
-          <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#334155" tick={{ fill: '#64748b', fontSize: 9 }} />
+          <PolarGrid stroke="rgba(255, 255, 255, 0.08)" />
+          <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'sans-serif' }} />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="rgba(255, 255, 255, 0.15)" tick={{ fill: '#64748b', fontSize: 9 }} />
           <Tooltip
-            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace' }}
+            contentStyle={{
+              backgroundColor: '#141722',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '10px',
+              fontSize: '12px',
+              color: '#e2e8f0',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+            }}
           />
           <Radar
-            name={`Top Cluster #${topCluster?.cluster_label + 1 || 1}`}
+            name={`Top Sector #${topCluster?.cluster_label + 1 || 1}`}
             dataKey="topCluster"
-            stroke="#ef4444"
-            fill="#ef4444"
-            fillOpacity={0.4}
+            stroke="#f43f5e"
+            fill="#f43f5e"
+            fillOpacity={0.35}
           />
           <Radar
             name="Mission Average"
             dataKey="missionAvg"
-            stroke="#06b6d4"
-            fill="#06b6d4"
-            fillOpacity={0.25}
+            stroke="#38bdf8"
+            fill="#38bdf8"
+            fillOpacity={0.2}
           />
         </RadarChart>
       </ResponsiveContainer>

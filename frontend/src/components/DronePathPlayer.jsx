@@ -38,12 +38,12 @@ export const DronePathPlayer = ({ currentWaypointIndex, onStepChange }) => {
   const activeWaypoint = flightPath[currentIndex] || null;
 
   return (
-    <div className="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-lg p-3 shadow-lg">
+    <div className="bg-[#11131a]/95 backdrop-blur border border-white/[0.08] rounded-xl p-3 shadow-lg">
       <div className="flex items-center justify-between gap-3 mb-2">
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-300">
-          <Plane className="w-4 h-4 text-cyan-400" />
-          <span>DRONE RECON REPLAY:</span>
-          <span className="text-cyan-400 font-bold">
+        <div className="flex items-center gap-2 text-xs text-slate-300">
+          <Plane className="w-4 h-4 text-sky-400" />
+          <span className="font-semibold text-slate-400 text-[11px] uppercase tracking-wider font-mono">Recon Replay:</span>
+          <span className="text-sky-400 font-bold font-mono tabular-nums">
             WP #{activeWaypoint ? String(activeWaypoint.sequence).padStart(2, '0') : '01'} / {totalWaypoints}
           </span>
         </div>
@@ -52,19 +52,19 @@ export const DronePathPlayer = ({ currentWaypointIndex, onStepChange }) => {
           <button
             onClick={() => setIsPlaying(!isPlaying)}
             disabled={totalWaypoints === 0}
-            className={`px-2.5 py-1 rounded text-xs font-mono font-medium border flex items-center gap-1 cursor-pointer transition-colors ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center gap-1.5 cursor-pointer transition-colors ${
               isPlaying
-                ? 'bg-amber-950/80 text-amber-300 border-amber-500/50'
-                : 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50 hover:bg-cyan-900/80'
+                ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+                : 'bg-sky-500/10 text-sky-300 border-sky-500/30 hover:bg-sky-500/20'
             }`}
           >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            {isPlaying ? 'PAUSE' : 'PLAY MISSION'}
+            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+            <span className="text-[11px] font-medium">{isPlaying ? 'Pause' : 'Play Mission'}</span>
           </button>
 
           <button
             onClick={handleReset}
-            className="p-1 rounded text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-xs bg-white/[0.04] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 border border-white/[0.08] transition-colors cursor-pointer"
             title="Reset Drone Mission"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -73,10 +73,10 @@ export const DronePathPlayer = ({ currentWaypointIndex, onStepChange }) => {
       </div>
 
       {activeWaypoint && (
-        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 bg-slate-950 px-2.5 py-1.5 rounded border border-slate-800/80">
-          <span>ALT: {activeWaypoint.altitude}m</span>
-          <span>SPD: {activeWaypoint.speed_mps} m/s</span>
-          <span className="text-cyan-400 uppercase font-semibold">ACTION: {activeWaypoint.action_type}</span>
+        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 bg-[#0c0d12] px-2.5 py-1.5 rounded-lg border border-white/[0.06]">
+          <span>ALT: <strong className="text-slate-200 font-semibold">{activeWaypoint.altitude}m</strong></span>
+          <span>SPD: <strong className="text-slate-200 font-semibold">{activeWaypoint.speed_mps} m/s</strong></span>
+          <span className="text-sky-400 font-medium">ACTION: {activeWaypoint.action_type}</span>
         </div>
       )}
     </div>

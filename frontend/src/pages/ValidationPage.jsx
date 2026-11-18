@@ -10,11 +10,11 @@ import {
   AlertTriangle,
   RefreshCw,
   Activity,
-  Sliders,
+  SlidersHorizontal,
   MapPin,
   Crosshair,
   ShieldAlert,
-  HelpCircle,
+  Info,
 } from 'lucide-react';
 
 export const ValidationPage = () => {
@@ -34,25 +34,25 @@ export const ValidationPage = () => {
   const details = validation?.details || [];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-7 space-y-6 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold font-mono text-slate-100 uppercase tracking-wide">
-              Ground-Truth Validation & Benchmark Evaluation
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-lg font-bold text-slate-100 tracking-tight">
+              Ground-Truth Validation & Benchmark
             </h1>
-            <TacticalBadge variant="simulated">SIMULATED BENCHMARK</TacticalBadge>
+            <TacticalBadge variant="simulated">Benchmark Protocol</TacticalBadge>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
-            Bipartite spatial matching comparing predicted DBSCAN cluster centroids against ground-truth disaster sectors.
+          <p className="text-xs text-slate-400 mt-1">
+            Bipartite spatial matching comparing predicted DBSCAN cluster centroids against simulated ground-truth rescue sectors.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-mono bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-            <span className="text-slate-400">Match Radius Threshold:</span>
-            <span className="text-cyan-400 font-bold">{matchRadius}m</span>
+          <div className="flex items-center gap-2 text-xs font-mono bg-[#11131a] px-3 py-1.5 rounded-lg border border-white/[0.08]">
+            <span className="text-slate-400">Match Radius:</span>
+            <span className="text-sky-400 font-bold tabular-nums">{matchRadius}m</span>
             <input
               type="range"
               min="50"
@@ -60,36 +60,36 @@ export const ValidationPage = () => {
               step="10"
               value={matchRadius}
               onChange={(e) => setMatchRadius(Number(e.target.value))}
-              className="w-20 accent-cyan-400 cursor-pointer"
+              className="w-20 accent-sky-400 cursor-pointer h-1.5 bg-white/[0.1] rounded"
             />
           </div>
 
           <button
             onClick={handleReevaluate}
             disabled={evaluating || loading}
-            className="px-4 py-2 text-xs font-mono font-bold rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-cyan-500/20"
+            className="px-4 py-2 text-xs font-semibold rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${evaluating ? 'animate-spin' : ''}`} />
-            <span>{evaluating ? 'Evaluating...' : 'RE-EVALUATE'}</span>
+            <span>{evaluating ? 'Evaluating...' : 'Re-Evaluate'}</span>
           </button>
         </div>
       </div>
 
-      {/* Prominent Simulated Data Disclaimer */}
-      <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-300 text-xs font-mono flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-400" />
+      {/* Protocol Banner */}
+      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-3">
+        <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
         <div>
-          <span className="font-bold uppercase tracking-wider text-amber-200">
+          <span className="font-semibold text-amber-200">
             Simulated Benchmark Validation Protocol:
           </span>
-          <p className="text-amber-300/90 leading-relaxed text-[11px] mt-0.5">
-            Validation performed against simulated ground-truth rescue zones. Never fabricate historical disaster statistics. This quantitative evaluation ensures that DBSCAN clustering reliably groups dispersed signals around high-priority survivor and debris sectors.
+          <p className="text-amber-300/80 leading-relaxed text-[11px] mt-0.5 font-sans">
+            Validation is performed against simulated ground-truth sectors to quantitatively verify that DBSCAN clustering reliably detects dense pockets without introducing false phantom clusters.
           </p>
         </div>
       </div>
 
-      {/* Validation Scorecards (6 Cards) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      {/* Validation Scorecards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
         <StatCard
           title="Precision"
           value={validation?.precision ? `${validation.precision}%` : '100.0%'}
@@ -115,7 +115,7 @@ export const ValidationPage = () => {
           title="Hotspot Coverage"
           value={validation?.coverage ? `${validation.coverage}%` : '100.0%'}
           subtitle="GT zones detected"
-          icon={Sliders}
+          icon={SlidersHorizontal}
           color="emerald"
         />
         <StatCard
@@ -135,30 +135,32 @@ export const ValidationPage = () => {
       </div>
 
       {/* Validation Map Preview */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5 shadow-xl space-y-3">
+      <div className="pro-card p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold flex items-center gap-1.5">
-            <Crosshair className="w-4 h-4 text-cyan-400" />
-            Predicted Hotspots (Solid) vs Ground Truth Zones (Dashed) Map Overlay
+          <h3 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
+            <Crosshair className="w-4 h-4 text-sky-400" />
+            <span>Predicted Hotspots (Solid) vs Ground Truth Zones (Dashed) Overlay</span>
           </h3>
-          <span className="text-[11px] font-mono text-slate-500">
-            Matching threshold radius: {matchRadius} meters
+          <span className="text-[11px] text-slate-400 font-mono">
+            Radius threshold: {matchRadius}m
           </span>
         </div>
 
-        <DisasterMap height="460px" />
+        <div className="rounded-lg overflow-hidden border border-white/[0.07]">
+          <DisasterMap height="460px" />
+        </div>
       </div>
 
       {/* Detailed Pairwise Matching Evaluation Table */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5 shadow-xl space-y-4">
-        <h3 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold flex items-center gap-1.5">
+      <div className="pro-card p-5 space-y-4">
+        <h3 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
           <Activity className="w-4 h-4 text-emerald-400" />
-          Spatial Match Evaluation Pairings ({details.length})
+          <span>Spatial Match Evaluation Pairings ({details.length})</span>
         </h3>
 
-        <div className="overflow-x-auto border border-slate-800 rounded-lg">
-          <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] border-b border-slate-800">
+        <div className="overflow-x-auto border border-white/[0.07] rounded-lg">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-white/[0.02] text-slate-400 uppercase text-[10px] font-mono border-b border-white/[0.07]">
               <tr>
                 <th className="p-3">Predicted Cluster</th>
                 <th className="p-3">Predicted Score / Tier</th>
@@ -169,10 +171,10 @@ export const ValidationPage = () => {
                 <th className="p-3">Match Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
+            <tbody className="divide-y divide-white/[0.05] bg-[#11131a]/40 font-mono text-[11px]">
               {details.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="p-6 text-center text-slate-500">
+                  <td colSpan="7" className="p-6 text-center text-slate-500 font-sans">
                     No validation evaluation records generated.
                   </td>
                 </tr>
@@ -182,47 +184,47 @@ export const ValidationPage = () => {
                   const isMissed = item.match_status === 'MISSED_GROUND_TRUTH';
 
                   return (
-                    <tr key={idx} className="hover:bg-slate-800/40">
-                      <td className="p-3 font-bold text-slate-200">
+                    <tr key={idx} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="p-3 font-semibold text-slate-200 font-sans">
                         {item.cluster_label !== null
-                          ? `Cluster #${item.cluster_label + 1}`
+                          ? `Sector ${item.cluster_label + 1}`
                           : <span className="text-slate-500">None (Missed)</span>}
                       </td>
                       <td className="p-3">
                         {item.predicted_score ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-cyan-400">{item.predicted_score}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sky-400 tabular-nums">{item.predicted_score}</span>
                             <TacticalBadge variant={item.predicted_priority}>{item.predicted_priority}</TacticalBadge>
                           </div>
                         ) : (
-                          <span className="text-slate-500">N/A</span>
+                          <span className="text-slate-500 font-sans">N/A</span>
                         )}
                       </td>
-                      <td className="p-3 font-semibold text-slate-300">
+                      <td className="p-3 font-medium text-slate-300 font-sans">
                         {item.gt_name}
                       </td>
                       <td className="p-3">
                         {item.gt_priority !== 'N/A' ? (
                           <TacticalBadge variant={item.gt_priority}>{item.gt_priority}</TacticalBadge>
                         ) : (
-                          <span className="text-slate-500">N/A</span>
+                          <span className="text-slate-500 font-sans">N/A</span>
                         )}
                       </td>
-                      <td className="p-3 text-slate-400">{item.gt_zone_type}</td>
-                      <td className="p-3 font-bold text-amber-400">
+                      <td className="p-3 text-slate-400 font-sans">{item.gt_zone_type}</td>
+                      <td className="p-3 font-semibold text-amber-400 tabular-nums">
                         {item.distance_meters !== null ? `${item.distance_meters} m` : '--'}
                       </td>
                       <td className="p-3">
                         {isMatched ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
                             MATCHED (TP)
                           </span>
                         ) : isMissed ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-950 text-red-400 border border-red-800">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/25">
                             MISSED (FN)
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/25">
                             UNMATCHED (FP)
                           </span>
                         )}

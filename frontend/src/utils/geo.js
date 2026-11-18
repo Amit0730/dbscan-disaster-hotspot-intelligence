@@ -1,32 +1,32 @@
 // Geo calculation helpers, formatters, and styling constants
 export const PRIORITY_COLORS = {
   CRITICAL: {
-    badge: 'bg-red-950/80 text-red-400 border-red-500/50',
-    fill: '#ef4444',
-    border: '#dc2626',
-    glow: 'rgba(239, 68, 68, 0.5)',
-    label: 'CRITICAL PRIORITY',
+    badge: 'bg-rose-500/10 text-rose-400 border-rose-500/25',
+    fill: '#f43f5e',
+    border: '#e11d48',
+    glow: 'rgba(244, 63, 94, 0.4)',
+    label: 'Critical Priority',
   },
   HIGH: {
-    badge: 'bg-amber-950/80 text-amber-400 border-amber-500/50',
+    badge: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
     fill: '#f59e0b',
     border: '#d97706',
-    glow: 'rgba(245, 158, 11, 0.4)',
-    label: 'HIGH PRIORITY',
+    glow: 'rgba(245, 158, 11, 0.35)',
+    label: 'High Priority',
   },
   MEDIUM: {
-    badge: 'bg-blue-950/80 text-blue-400 border-blue-500/50',
-    fill: '#3b82f6',
-    border: '#2563eb',
-    glow: 'rgba(59, 130, 246, 0.4)',
-    label: 'MEDIUM PRIORITY',
+    badge: 'bg-sky-500/10 text-sky-400 border-sky-500/25',
+    fill: '#38bdf8',
+    border: '#0284c7',
+    glow: 'rgba(56, 189, 248, 0.35)',
+    label: 'Medium Priority',
   },
   LOW: {
-    badge: 'bg-emerald-950/80 text-emerald-400 border-emerald-500/50',
+    badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
     fill: '#10b981',
     border: '#059669',
     glow: 'rgba(16, 185, 129, 0.3)',
-    label: 'LOW PRIORITY',
+    label: 'Low Priority',
   },
 };
 

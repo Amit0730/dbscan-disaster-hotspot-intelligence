@@ -13,7 +13,7 @@ import { PRIORITY_COLORS } from '../utils/geo';
 
 export const PriorityDistributionChart = ({ clusters }) => {
   if (!clusters || clusters.length === 0) {
-    return <div className="h-64 flex items-center justify-center text-xs font-mono text-slate-500">No clusters detected</div>;
+    return <div className="h-64 flex items-center justify-center text-xs text-slate-500 font-sans">No sectors detected</div>;
   }
 
   // Aggregate clusters by priority tier
@@ -26,22 +26,29 @@ export const PriorityDistributionChart = ({ clusters }) => {
   });
 
   const data = [
-    { tier: 'CRITICAL', count: tierCounts.CRITICAL, fill: PRIORITY_COLORS.CRITICAL.fill },
-    { tier: 'HIGH', count: tierCounts.HIGH, fill: PRIORITY_COLORS.HIGH.fill },
-    { tier: 'MEDIUM', count: tierCounts.MEDIUM, fill: PRIORITY_COLORS.MEDIUM.fill },
-    { tier: 'LOW', count: tierCounts.LOW, fill: PRIORITY_COLORS.LOW.fill },
+    { tier: 'Critical', count: tierCounts.CRITICAL, fill: PRIORITY_COLORS.CRITICAL.fill },
+    { tier: 'High', count: tierCounts.HIGH, fill: PRIORITY_COLORS.HIGH.fill },
+    { tier: 'Medium', count: tierCounts.MEDIUM, fill: PRIORITY_COLORS.MEDIUM.fill },
+    { tier: 'Low', count: tierCounts.LOW, fill: PRIORITY_COLORS.LOW.fill },
   ];
 
   return (
     <div className="w-full h-64">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-          <XAxis dataKey="tier" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'monospace' }} />
-          <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'monospace' }} allowDecimals={false} />
+        <BarChart data={data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" vertical={false} />
+          <XAxis dataKey="tier" stroke="rgba(255, 255, 255, 0.15)" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'sans-serif' }} />
+          <YAxis stroke="rgba(255, 255, 255, 0.15)" tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }} allowDecimals={false} />
           <Tooltip
-            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '12px', fontFamily: 'monospace' }}
-            cursor={{ fill: 'rgba(255, 255, 255, 0.04)' }}
+            contentStyle={{
+              backgroundColor: '#141722',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '10px',
+              fontSize: '12px',
+              color: '#e2e8f0',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+            }}
+            cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
           />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
             {data.map((entry, index) => (

@@ -16,6 +16,7 @@ import {
   Maximize2,
   Shield,
   Eye,
+  Radio,
 } from 'lucide-react';
 
 export const HotspotMapPage = () => {
@@ -37,33 +38,33 @@ export const HotspotMapPage = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-7 space-y-5 max-w-[1600px] mx-auto">
       {/* Top Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold font-mono text-slate-100 uppercase tracking-wide">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-lg font-bold text-slate-100 tracking-tight">
               Tactical Geospatial Hotspot Map
             </h1>
-            <TacticalBadge variant="active">FULLSCREEN GIS</TacticalBadge>
+            <TacticalBadge variant="active">Fullscreen GIS</TacticalBadge>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
-            Dynamic Leaflet GIS interface displaying multi-sensor detections, geodesic DBSCAN polygons, and live drone flight simulation.
+          <p className="text-xs text-slate-400 mt-1">
+            Dynamic Leaflet GIS interface displaying multi-sensor detections, geodesic DBSCAN polygons, and synchronized flight path replay.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <div className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
-            Visible Signals: <strong className="text-cyan-400">{visibleSignals.length}</strong>
+        <div className="flex items-center gap-2.5 text-xs font-mono">
+          <div className="px-3 py-1.5 rounded-lg bg-[#11131a] border border-white/[0.08] text-slate-300">
+            Visible Signals: <strong className="text-sky-400 tabular-nums">{visibleSignals.length}</strong>
           </div>
-          <div className="px-3 py-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
-            Detected Hotspots: <strong className="text-amber-400">{clusters.length}</strong>
+          <div className="px-3 py-1.5 rounded-lg bg-[#11131a] border border-white/[0.08] text-slate-300">
+            Detected Hotspots: <strong className="text-amber-400 tabular-nums">{clusters.length}</strong>
           </div>
         </div>
       </div>
 
       {/* Main Full-Scale Map */}
-      <div className="relative">
+      <div className="rounded-xl overflow-hidden border border-white/[0.08] shadow-xl">
         <DisasterMap
           height="620px"
           activeDroneWaypointIndex={activeDroneWpIndex}
@@ -81,34 +82,34 @@ export const HotspotMapPage = () => {
       </div>
 
       {/* Quick Cluster Selector Strip */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-xl space-y-3">
+      <div className="pro-card p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-            Quick Hotspot Focus Selector
+          <h3 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-sky-400" />
+            <span>Quick Hotspot Focus Selector</span>
           </h3>
-          <span className="text-[11px] font-mono text-slate-500">
-            Click to open triage breakdown
+          <span className="text-[11px] text-slate-500">
+            Click to inspect multi-sensor triage breakdown
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {clusters.map((c, i) => (
             <button
               key={c.id}
               onClick={() => handleClusterSelect(c)}
-              className="p-3 rounded-lg bg-slate-950 border border-slate-800 hover:border-cyan-500/50 text-left transition-all cursor-pointer group"
+              className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-sky-500/40 hover:bg-white/[0.04] text-left transition-all cursor-pointer group"
             >
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="font-bold text-slate-200 group-hover:text-cyan-400">
-                  Cluster #{c.cluster_label + 1}
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-200 group-hover:text-sky-300">
+                  Sector {c.cluster_label + 1}
                 </span>
                 <TacticalBadge variant={c.classification}>{c.classification}</TacticalBadge>
               </div>
-              <div className="text-sm font-black font-mono text-cyan-400 mt-1">
+              <div className="text-sm font-bold font-mono text-sky-400 mt-1 tabular-nums">
                 {c.priority_score} <span className="text-[10px] text-slate-500 font-normal">pts</span>
               </div>
-              <div className="text-[10px] font-mono text-slate-400 mt-1 truncate">
+              <div className="text-[11px] font-mono text-slate-400 mt-1 truncate">
                 {c.signal_count} signals &bull; {c.cluster_density}/km²
               </div>
             </button>

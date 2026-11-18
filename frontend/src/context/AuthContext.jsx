@@ -1,4 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  signInWithGoogle,
+  signInWithEmail,
+  registerWithEmail,
+  logoutFirebase,
+  isFirebaseConfigured,
+  getStoredFirebaseConfig,
+  saveFirebaseConfig,
+} from '../config/firebase';
 
 const AuthContext = createContext();
 
@@ -6,36 +15,36 @@ const PRESET_USERS = {
   commander: {
     id: 'usr-001',
     name: 'Cmdr. Sarah Vance',
-    callsign: 'AEGIS-LEAD-01',
-    role: 'RESCUE COMMANDER',
-    clearance: 'LEVEL-5 USAR TOP SECRET',
+    email: 'sarah.vance@disaster-response.org',
+    callsign: 'COMMANDER',
+    role: 'Search & Rescue Lead',
+    clearance: 'Level-5 USAR Operations',
     sector: 'Sector Alpha - Urban Collapse',
-    avatar: '🛡️',
   },
   operator: {
     id: 'usr-002',
     name: 'Lt. Marcus Drake',
-    callsign: 'RECON-PILOT-04',
-    role: 'UAV DRONE OPERATOR',
-    clearance: 'LEVEL-4 FLIGHT OPERATIONS',
+    email: 'marcus.drake@drone-recon.org',
+    callsign: 'UAV-PILOT',
+    role: 'UAV RECON PILOT',
+    clearance: 'Level-4 Flight Operations',
     sector: 'Sector Bravo - Industrial Hazard',
-    avatar: '🛰️',
   },
   analyst: {
     id: 'usr-003',
     name: 'Dr. Elena Rostova',
-    callsign: 'GEO-ANALYST-09',
+    email: 'elena.rostova@geospatial-ai.org',
+    callsign: 'GIS-ANALYST',
     role: 'THERMAL & GIS ANALYST',
-    clearance: 'LEVEL-4 SCIENTIFIC ADVISOR',
+    clearance: 'Level-4 Data Intelligence',
     sector: 'Sector Charlie - Flood Recon',
-    avatar: '📊',
   },
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('aegis_auth_user');
+      const saved = localStorage.getItem('disaster_intel_auth_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -46,51 +55,69 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('aegis_auth_user', JSON.stringify(user));
+      localStorage.setItem('disaster_intel_auth_user', JSON.stringify(user));
     } else {
-      localStorage.removeItem('aegis_auth_user');
+      localStorage.removeItem('disaster_intel_auth_user');
     }
   }, [user]);
 
+  // 1. Google Sign-In via Firebase
+  const loginWithGoogle = async () => {
+    setLoading(true);
+    try {
+      const authResult = await signInWithGoogle();
+      setUser(authResult);
+      return authResult;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. Email & Password Sign-In
+  const loginWithEmail = async (email, password) => {
+    setLoading(true);
+    try {
+      const authResult = await signInWithEmail(email, password);
+      setUser(authResult);
+      return authResult;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 3. Email & Password Registration (Create Account)
+  const registerUser = async (name, email, password, role) => {
+    setLoading(true);
+    try {
+      const authResult = await registerWithEmail(name, email, password, role);
+      setUser(authResult);
+      return authResult;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 4. Quick Demo Preset Roles (for fast hackathon review / testing)
   const loginWithPreset = async (presetKey) => {
     setLoading(true);
-    // Simulate brief tactical network handshake
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 400));
     const selected = PRESET_USERS[presetKey] || PRESET_USERS.commander;
-    setUser({
+    const authResult = {
       ...selected,
-      token: `jwt_aegis_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      authenticatedAt: new Date().toISOString(),
-    });
-    setLoading(false);
-    return true;
-  };
-
-  const loginWithCredentials = async (callsign, password, sector = 'Sector Alpha - Urban Collapse') => {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    
-    // Accept any valid callsign or password in demo mode
-    const authenticatedUser = {
-      id: `usr-${Math.floor(Math.random() * 900 + 100)}`,
-      name: callsign.toUpperCase(),
-      callsign: callsign.toUpperCase().includes('AEGIS') ? callsign.toUpperCase() : `TAC-${callsign.toUpperCase()}`,
-      role: 'DISASTER FIELD OPERATOR',
-      clearance: 'LEVEL-4 TACTICAL FIELD UNIT',
-      sector: sector || 'Sector Alpha - Urban Collapse',
-      avatar: '🎖️',
-      token: `jwt_aegis_${Date.now()}`,
+      provider: 'preset',
+      token: `demo_token_${Date.now()}`,
       authenticatedAt: new Date().toISOString(),
     };
-
-    setUser(authenticatedUser);
+    setUser(authResult);
     setLoading(false);
-    return true;
+    return authResult;
   };
 
-  const logout = () => {
+  // 5. Logout
+  const logout = async () => {
+    await logoutFirebase();
     setUser(null);
-    localStorage.removeItem('aegis_auth_user');
+    localStorage.removeItem('disaster_intel_auth_user');
   };
 
   return (
@@ -99,10 +126,15 @@ export const AuthProvider = ({ children }) => {
         user,
         isAuthenticated: !!user,
         loading,
+        loginWithGoogle,
+        loginWithEmail,
+        registerUser,
         loginWithPreset,
-        loginWithCredentials,
         logout,
         presetUsers: PRESET_USERS,
+        isFirebaseConfigured,
+        getStoredFirebaseConfig,
+        saveFirebaseConfig,
       }}
     >
       {children}
@@ -117,3 +149,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
